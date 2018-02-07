@@ -4,7 +4,6 @@
             [re-frame.core :as re-frame]
             [status-im.constants :as constants]
             [status-im.i18n :as i18n]
-            [status-im.protocol.core :as protocol]
             [status-im.chat.models :as models]
             [status-im.chat.console :as console]
             [status-im.data-store.chats :as chats]
@@ -102,7 +101,7 @@
 (re-frame/reg-fx
   :protocol-send-seen
   (fn [params]
-    (protocol/send-seen! params)))
+    #_(protocol/send-seen! params)))
 
 (re-frame/reg-fx
   :browse
