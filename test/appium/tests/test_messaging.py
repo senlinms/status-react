@@ -78,6 +78,7 @@ class TestMessages(MultipleDeviceTestCase):
 
         device_1_chat.chat_options.click()
         device_1_chat.delete_chat_button.click()
+        device_1_chat.delete_button.click()
         if not device_1_home.plus_button.is_element_present() or \
                 device_1_chat.element_by_text_part(device_2_username[:25]).is_element_present():
             self.errors.append('Chat was not deleted')
@@ -101,7 +102,7 @@ class TestMessages(MultipleDeviceTestCase):
             profile.home_button.click()
         for public_key in public_key_2, public_key_3:
             home_1.add_contact(public_key)
-            home_1.back_button.click()
+            home_1.get_back_to_home_view()
         chat_name = 'super_group_chat'
         home_1.create_group_chat(sorted([username_2, username_3]), chat_name)
         chat_1 = home_1.get_chat_view()

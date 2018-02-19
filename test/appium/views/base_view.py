@@ -42,6 +42,12 @@ class DenyButton(BaseButton):
         self.locator = self.Locator.xpath_selector("//*[@text='Deny']")
 
 
+class DeleteButton(BaseButton):
+    def __init__(self, driver):
+        super(DeleteButton, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector("//*[@text='Delete']")
+
+
 class YesButton(BaseButton):
     def __init__(self, driver):
         super(YesButton, self).__init__(driver)
@@ -135,10 +141,21 @@ class StatusAppIcon(BaseButton):
             "//*[@text='Status']")
 
 
+class SendMessageButton(BaseButton):
+    def __init__(self, driver):
+        super(SendMessageButton, self).__init__(driver)
+        self.locator = self.Locator.accessibility_id("send-message-button")
+
+    def click(self):
+        self.find_element().click()
+        info('Tap on %s' % self.name)
+
+
 class BaseView(object):
     def __init__(self, driver):
         self.driver = driver
 
+        self.send_message_button = SendMessageButton(self.driver)
         self.home_button = HomeButton(self.driver)
         self.wallet_button = WalletButton(self.driver)
         self.profile_button = ProfileButton(self.driver)
@@ -153,6 +170,7 @@ class BaseView(object):
         self.next_button = NextButton(self.driver)
         self.save_button = SaveButton(self.driver)
         self.done_button = DoneButton(self.driver)
+        self.delete_button = DeleteButton(self.driver)
 
         self.apps_button = AppsButton(self.driver)
         self.status_app_icon = StatusAppIcon(self.driver)

@@ -110,7 +110,8 @@ def make_github_report(error=None):
         outcome = '%s' % ':x:' if error else ':white_check_mark:' + ':\n'
         title += outcome
         steps = '\n\n <details>\n<summary>Test Steps & Error message:</summary>\n\n ```%s ```%s\n\n</details>\n' % \
-                (test_data.test_info[test_data.test_name]['steps'], '\n```' + error + '```' if error else '')
+                (test_data.test_info[test_data.test_name]['steps'], '\n```' + error.replace('\n', '') + '```'
+                 if error else '')
         sessions = str()
 
         for job_id in test_data.test_info[test_data.test_name]['jobs']:
