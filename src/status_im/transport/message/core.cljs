@@ -2,10 +2,6 @@
   (:require [status-im.utils.handlers :as handlers]
             [status-im.chat.models :as models.chat]))
 
-(def ping-topic "0x01010202")
-
-(def ttl 10000)
-
 (defprotocol StatusMessage
   "Protocol for transport layed status messages"
   (send [this chat-id cofx])
@@ -57,7 +53,7 @@
                          :address          address
                          :photo-path       profile-image
                          :name             name
-                         :fcm-token        fcm-token} 
+                         :fcm-token        fcm-token}
           chat-props    {:name    name
                          :chat-id public-key}]
       (handlers/merge-fx cofx

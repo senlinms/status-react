@@ -4,7 +4,6 @@
             [re-frame.core :as re-frame]
             [taoensso.timbre :as log]))
 
-
 (defonce filters (atom {}))
 
 (defn remove-filter! [web3 options]

@@ -7,15 +7,11 @@
             [taoensso.timbre :as log]))
 
 (defn stop-whisper! []
-  #_(stop-watching-all!)
-  #_(reset-all-pending-messages!)
-  #_(reset-keys!))
+  #_(stop-watching-all!))
 
 (defn init-whisper!
   [{:keys [identity web3 transport]}]
   (log/debug :init-whisper)
-  (stop-whisper!)
-
   (filters/add-filter! web3
                        {:privateKeyID identity
                         :topics [(transport.utils/get-topic identity)]}
