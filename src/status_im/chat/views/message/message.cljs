@@ -176,6 +176,11 @@
    (let [parsed-text (parse-text content #(re-frame/dispatch [:browse-link-from-message %]))]
      [react/text {:style (style/text-message message)} parsed-text])])
 
+(defn placeholder-message
+  [{:keys [content] :as message}]
+  [message-view message
+   [react/text {:style (style/text-message message)} content]])
+
 (defmulti message-content (fn [_ message _] (message :content-type)))
 
 (defmethod message-content constants/content-type-command-request
@@ -199,6 +204,10 @@
   [wrapper message]
   [wrapper message
    [message-view message [message-content-command message]]])
+
+(defmethod message-content constants/content-type-placeholder
+  [wrapper message]
+  [wrapper message [placeholder-message message]])
 
 (defmethod message-content :default
   [wrapper {:keys [content-type content] :as message}]
@@ -329,7 +338,7 @@
      ;; send `:seen` signal when we have signed-in user, message not from us and we didn't sent it already
      #(when (and current-public-key message-id chat-id (not outgoing)
                  (not (models.message/message-seen-by? message current-public-key)))
-        (re-frame/dispatch [:send-seen! {:chat-id    chat-id
+        #_(re-frame/dispatch [:send-seen! {:chat-id    chat-id
                                          :from       from
                                          :me         current-public-key
                                          :message-id message-id}]))

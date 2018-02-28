@@ -15,6 +15,7 @@
 (def content-type-command "command")
 (def content-type-command-request "command-request")
 (def content-type-status "status")
+(def content-type-placeholder "placeholder")
 
 (def min-password-length 6)
 (def max-chat-name-length 20)

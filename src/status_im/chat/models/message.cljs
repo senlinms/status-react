@@ -31,6 +31,7 @@
                            (assoc :appearing? false))]
     {:db           (cond-> (-> db
                                (update-in [:chats chat-id :messages] assoc message-id prepared-message)
+                               (update-in [:chats chat-id :messages] dissoc from-clock-value)
                                (assoc-in [:chats chat-id :last-from-clock-value] from-clock-value)
                                (assoc-in [:chats chat-id :last-to-clock-value] to-clock-value))
                      (not current-chat?)
@@ -45,7 +46,27 @@
 (defn- get-current-account [{:accounts/keys [accounts current-account-id]}]
   (get accounts current-account-id))
 
-(defn- add-received-message [{:keys [chat-id content content-type timestamp to-clock-value] :as message} {:keys [db now] :as cofx}]
+(defn- placeholder-message [chat-id from timestamp temp-id to-clock]
+  {:message-id       temp-id
+   :outgoing         false
+   :chat-id          chat-id
+   :from             from
+   :to               "me"
+   :content          "Waiting for message to arrive..."
+   :content-type     constants/content-type-placeholder
+   :show?            true
+   :from-clock-value temp-id
+   :to-clock-value   to-clock
+   :timestamp        timestamp})
+
+(defn- add-placeholder-messages [chat-id from timestamp old-from-clock to-clock new-from-clock {:keys [db]}]
+  (when (> (- new-from-clock old-from-clock) 1)
+    {:db (reduce (fn [db temp-id]
+                   (assoc-in db [:chats chat-id :messages temp-id] (placeholder-message chat-id from timestamp temp-id to-clock)))
+                 db
+                 (range (inc old-from-clock) new-from-clock))}))
+
+(defn- add-received-message [{:keys [from chat-id content content-type timestamp to-clock-value] :as message} {:keys [db now] :as cofx}]
   (let [{:keys [current-chat-id
                 view-id
                 access-scope->commands-responses]
@@ -55,21 +76,24 @@
         {:keys [last-from-clock-value
                 last-to-clock-value] :as chat}    (get-in db [:chats chat-id])
         command-request?                          (= content-type constants/content-type-command-request)
-        request-command                           (:request-command content)]
-    (add-message chat-id
-                 (cond-> (assoc message
-                                :timestamp        (or timestamp now)
-                                :show?            true
-                                :from-clock-value (or to-clock-value (inc last-from-clock-value))
-                                :to-clock-value   last-to-clock-value)
-                   public-key
-                   (assoc :user-statuses {public-key (if current-chat? :seen :received)})
-                   (and request-command command-request?)
-                   (assoc-in [:content :request-command-ref]
-                             (lookup-response-ref access-scope->commands-responses
-                                                  current-account chat contacts request-command)))
-                 current-chat?
-                 cofx)))
+        request-command                           (:request-command content)
+        new-from-clock-value                      (or to-clock-value (inc last-from-clock-value))
+        new-timestamp                             (or timestmap now)]
+    (handlers/merge-fx cofx
+                       (add-message chat-id
+                                    (cond-> (assoc message
+                                                   :timestamp        new-timestamp
+                                                   :show?            true
+                                                   :from-clock-value new-from-clock-value
+                                                   :to-clock-value   last-to-clock-value)
+                                      public-key
+                                      (assoc :user-statuses {public-key (if current-chat? :seen :received)})
+                                      (and request-command command-request?)
+                                      (assoc-in [:content :request-command-ref]
+                                                (lookup-response-ref access-scope->commands-responses
+                                                                     current-account chat contacts request-command)))
+                                    current-chat?)
+                       (add-placeholder-messages chat-id from new-timestamp last-from-clock-value last-to-clock-value new-from-clock-value))))
 
 (defn receive
   [cofx {:keys [chat-id message-id] :as message}]
