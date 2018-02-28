@@ -27,7 +27,7 @@
   :stored-unviewed-messages
   (fn [cofx _]
     (assoc cofx :stored-unviewed-messages
-                (messages/get-unviewed (-> cofx :db :current-public-key)))))
+           (messages/get-unviewed (-> cofx :db :current-public-key)))))
 
 (re-frame/reg-cofx
   :get-stored-message
@@ -188,12 +188,12 @@
           chats (reduce (fn [acc {:keys [chat-id] :as chat}]
                           (let [chat-messages (index-messages (get-stored-messages chat-id))]
                             (assoc acc chat-id
-                                       (assoc chat
-                                         :unviewed-messages (get stored-unviewed-messages chat-id)
-                                         :requests (get chat->message-id->request chat-id)
-                                         :messages chat-messages
-                                         :not-loaded-message-ids (set/difference (get stored-message-ids chat-id)
-                                                                                 (-> chat-messages keys set))))))
+                                   (assoc chat
+                                          :unviewed-messages (get stored-unviewed-messages chat-id)
+                                          :requests (get chat->message-id->request chat-id)
+                                          :messages chat-messages
+                                          :not-loaded-message-ids (set/difference (get stored-message-ids chat-id)
+                                                                                  (-> chat-messages keys set))))))
                         {}
                         all-stored-chats)]
       (-> db
@@ -214,13 +214,13 @@
                                    (assoc-in [:chats chat-id :messages message-id :user-statuses] statuses))
                :update-message {:message-id    message-id
                                 :user-statuses statuses}}
-              ;; for public chats and 1-1 bot/dapp chats, it makes no sense to signalise `:seen` msg
-              (not (or public? (get-in contacts [chat-id :dapp?])))
-              (assoc :protocol-send-seen {:web3    web3
-                                          :message (cond-> {:from       me
-                                                            :to         from
-                                                            :message-id message-id}
-                                                           group-chat (assoc :group-id chat-id))})))))
+        ;; for public chats and 1-1 bot/dapp chats, it makes no sense to signalise `:seen` msg
+        (not (or public? (get-in contacts [chat-id :dapp?])))
+        (assoc :protocol-send-seen {:web3    web3
+                                    :message (cond-> {:from       me
+                                                      :to         from
+                                                      :message-id message-id}
+                                               group-chat (assoc :group-id chat-id))})))))
 
 (handlers/register-handler-fx
   :browse-link-from-message
@@ -237,8 +237,8 @@
                      (models/set-chat-ui-props {:validation-messages nil})
                      (update-in [:chats chat-id] dissoc :chat-loaded-event))}
 
-            chat-loaded-event
-            (assoc :dispatch chat-loaded-event))))
+      chat-loaded-event
+      (assoc :dispatch chat-loaded-event))))
 
 (handlers/register-handler-fx
   :add-chat-loaded-event
@@ -246,7 +246,7 @@
   (fn [{:keys [db] :as cofx} [chat-id event]]
     (if (get (:chats db) chat-id)
       {:db (assoc-in db [:chats chat-id :chat-loaded-event] event)}
-      (-> (models/add-chat cofx chat-id)                    ; chat not created yet, we have to create it
+      (-> (models/add-chat chat-id cofx) ; chat not created yet, we have to create it
           (assoc-in [:db :chats chat-id :chat-loaded-event] event)))))
 
 ;; TODO(janherich): remove this unnecessary event in the future (only model function `add-chat` will stay)
@@ -254,7 +254,7 @@
   :add-chat
   [(re-frame/inject-cofx :get-stored-chat) re-frame/trim-v]
   (fn [cofx [chat-id chat-props]]
-    (models/add-chat cofx chat-id chat-props)))
+    (models/add-chat chat-id chat-props cofx)))
 
 (defn navigate-to-chat
   "Takes coeffects map and chat-id, returns effects necessary for navigation and preloading data"
@@ -280,7 +280,7 @@
     (when (not= (:current-public-key db) contact-id)        ; don't allow to open chat with yourself
       (if (get (:chats db) contact-id)
         (navigate-to-chat cofx contact-id navigation-replace?) ; existing chat, just preload and displey
-        (let [add-chat-fx (models/add-chat cofx contact-id)] ; new chat, create before preload & display
+        (let [add-chat-fx (models/add-chat contact-id cofx)] ; new chat, create before preload & display
           (merge add-chat-fx
                  (navigate-to-chat (assoc cofx :db (:db add-chat-fx))
                                    contact-id
@@ -291,29 +291,13 @@
   :update-chat!
   [re-frame/trim-v]
   (fn [cofx [chat]]
-    (models/update-chat cofx chat)))
-
-(handlers/register-handler-fx
-  :remove-chat
-  [re-frame/trim-v]
-  (fn [{:keys [db]} [chat-id]]
-    (let [{:keys [chat-id group-chat debug?]} (get-in db [:chats chat-id])]
-      (cond-> {:db                      (-> db
-                                            (update :chats dissoc chat-id)
-                                            (update :deleted-chats (fnil conj #{}) chat-id))
-               :delete-pending-messages chat-id}
-              (or group-chat debug?)
-              (assoc :delete-messages chat-id)
-              debug?
-              (assoc :delete-chat chat-id)
-              (not debug?)
-              (assoc :deactivate-chat chat-id)))))
+    (models/update-chat chat cofx)))
 
 (handlers/register-handler-fx
   :delete-chat
   [re-frame/trim-v]
   (fn [cofx [chat-id]]
-    (-> (models/remove-chat cofx chat-id)
+    (-> (models/remove-chat chat-id cofx)
         (update :db navigation/replace-view :home))))
 
 (handlers/register-handler-fx
