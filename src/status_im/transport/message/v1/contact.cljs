@@ -3,8 +3,7 @@
             [status-im.utils.handlers :as handlers]
             [status-im.transport.message.core :as message]
             [status-im.transport.message.v1.protocol :as protocol]
-            [status-im.transport.utils :as transport.utils]
-            [status-im.data-store.transport :as data-store.transport]))
+            [status-im.transport.utils :as transport.utils]))
 
 (defrecord NewContactKey [sym-key message]
   message/StatusMessage
