@@ -104,8 +104,9 @@
                                       id->messages)]
     (->> datemark->messages
          (map (fn [[datemark messages]]
-                [datemark (sort-by clock-sorter > messages)]))
-         (sort-by (comp clock-sorter first second) >))))
+                [datemark (->> messages (sort-by clock-sorter) reverse)]))
+         (sort-by (comp clock-sorter first second))
+         reverse)))
 
 (reg-sub
   :get-chat-message-datemark-groups
