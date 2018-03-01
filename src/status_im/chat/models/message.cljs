@@ -78,7 +78,7 @@
         command-request?                          (= content-type constants/content-type-command-request)
         request-command                           (:request-command content)
         new-from-clock-value                      (or to-clock-value (inc last-from-clock-value))
-        new-timestamp                             (or timestmap now)]
+        new-timestamp                             (or timestamp now)]
     (handlers/merge-fx cofx
                        (add-message chat-id
                                     (cond-> (assoc message

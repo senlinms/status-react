@@ -20,13 +20,13 @@
                                                      (console-chat/console-message
                                                       {:message-id id
                                                        :content (str type ": " message)
-                                                       :content-type const/text-content-type}))
+                                                       :content-type constants/text-content-type}))
                                                    messages random-id-seq)]
              (conj message-events
                    (console-chat/console-message
                     {:message-id   (first random-id-seq)
                      :content      (str content)
-                     :content-type const/text-content-type})))
+                     :content-type constants/text-content-type})))
       (log/debug "ignoring command: " name))))
 
 (defn faucet-base-url->url [url]
